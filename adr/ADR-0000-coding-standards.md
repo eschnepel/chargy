@@ -1,11 +1,12 @@
 # ADR-0000 – Code Quality Standards, Programming Style & Core Concepts
 
-**Date:** 2026-09-20 **Status:** Draft **Split note (2026-09-20):** the module
-dependency diagram and every project-specific identifier (package name,
-entity-class prefix, minimum Python/HA version) that originally lived in this
-document have been moved out into a dedicated project-conventions ADR, so this
-document stays genuinely project-independent. See the project's `adr/INDEX.md`
-for that ADR's number and title.
+**Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 (Phase 0 review:
+§1 CI file name, §3 recorder rule, §6 test stubs) **Split note (2026-09-20):**
+the module dependency diagram and every project-specific identifier (package
+name, entity-class prefix, minimum Python/HA version) that originally lived in
+this document have been moved out into a dedicated project-conventions ADR, so
+this document stays genuinely project-independent. See the project's
+`adr/INDEX.md` for that ADR's number and title.
 
 ---
 
@@ -45,7 +46,10 @@ for exactly what that companion ADR needs to supply.
 
 ### 1 — Tooling: ruff, mypy strict, pytest
 
-Three tools gate every change, run via `.github/workflows/ci.yml`:
+Three tools gate every change (four invocations). CI runs them via
+`.github/workflows/code_checker.yml`: ruff, ruff-format, mypy and `mdformat`
+(over the Markdown, these ADRs included) through pre-commit, and `pytest` as its
+own step:
 
 | Tool | Purpose | Invocation |
 | -- | -- | -- |
@@ -96,10 +100,17 @@ This is what allows the domain math to be unit-tested in complete isolation from
 Home Assistant (§6) and, incidentally, to be reusable outside HA entirely (e.g.
 a CLI tool or a test harness) if ever useful.
 
-A module that necessarily talks to `hass.states` by design — because its whole
-job is reading another integration's entities — is an explicit, narrow exception
-to "zero HA imports." It still never touches the coordinator's orchestration
+A module that necessarily talks to Home Assistant by design — because its whole
+job is reading another integration's entities (`hass.states`) or calling that
+integration's action for its response data — is an explicit, narrow exception to
+"zero HA imports." It still never touches the coordinator's orchestration
 concerns and never writes state at this layer.
+
+**Recorder access is a separate, stricter rule:** no module — pure tier or
+exception — imports the recorder API. History is read through a synchronous
+`fetch_fn` callable injected by the coordinator, the only module that touches
+the recorder. This keeps history-consuming calculations in the zero-mocking tier
+(§6).
 
 This document intentionally contains no concrete module diagram: the actual
 file/package layout is domain-specific and, before any code exists, usually
@@ -153,8 +164,14 @@ sketch — in its companion project-conventions ADR.
   Assistant dependency, tests call the real functions with real dataclass
   instances and assert on real return values. This is only possible *because* of
   the module boundary in §3; it is the practical payoff of that design choice.
-  The narrow exception is any module that reads `hass.states` directly by design
-  (§3's exception) — those are tested against a real `hass` fixture instead.
+  The narrow exception is any module that reads `hass.states` or calls another
+  integration's action directly by design (§3's exception), plus the HA-facing
+  layer itself (coordinator, entities, config flow). Those are tested against a
+  hand-written `homeassistant` stub registered into `sys.modules` before the
+  module is file-path-loaded, together with real (non-`Mock`) `Fake*` stand-ins
+  for `hass`, its states, services, storage and config entries, kept in shared
+  test-support modules (named in the project-conventions ADR). Neither a real
+  Home Assistant instance nor `pytest-homeassistant-custom-component` is used.
 - Tests are loaded via direct file-path import
   (`importlib.util.spec_from_file_location`) rather than package import,
   specifically to avoid pulling in `custom_components/<project>/__init__.py`

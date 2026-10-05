@@ -1,7 +1,8 @@
 # ADR-0003 – Tier Strategy Architecture
 
-**Date:** 2026-09-20 **Status:** Draft **Related ADRs:** ADR-0002 (price curve
-input) **Related capability:** CAP-02 (`adr/adr-capability.md`)
+**Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
+ADR-0002 (price curve input), ADR-0001 §6 (history via `fetch_fn`) **Related
+capability:** CAP-02 (`adr/adr-capability.md`)
 
 ---
 
@@ -22,15 +23,24 @@ that plan is later used for.
 
 ### 1 — Base class contract
 
-`classify(price_curve)` → an ordered list of `(tier, start, end)` windows,
-spanning exactly the horizon the input price curve (ADR-0002) covers — no
-independent planning horizon is introduced at this layer.
+`classify(price_curve, history)` → an ordered list of `(tier, start, end)`
+windows, spanning exactly the horizon the input `price_curve` (ADR-0002) covers
+— no independent planning horizon is introduced at this layer. `history` is an
+optional earlier price series (possibly empty) used only as statistical context
+by strategies that need it (`RollingWindowTier`); it is never classified itself
+and never extends the output.
 
-### 2 — Tier-count-agnostic
+### 2 — Tier-count-agnostic, with a floor of three
 
-The contract does not assume any fixed number of tiers (not hardcoded to five).
-A tier is an opaque, ordered label; strategies decide how many exist and their
-names.
+A tier is an opaque label with an integer **rank** (0 = cheapest, ascending in
+price). Strategies decide how many tiers exist and what they are called; nothing
+downstream assumes a fixed number such as five.
+
+The one hard rule: **every strategy must produce at least 3 tiers** — a lowest,
+a highest and at least one middle tier — so a neutral band always exists between
+the cheapest and the most expensive. Config-flow validation enforces this per
+strategy (e.g. `FixedBoundaryTier` needs at least two cutoffs,
+`RollingWindowTier` at least two percentile boundaries).
 
 ### 3 — Recomputation trigger
 
@@ -39,20 +49,26 @@ a price-provider data update), not on a separate fixed polling schedule.
 
 ### 4 — Implementations in scope
 
-- **`DerivedFromProviderTier`** — uses the active provider's own native tier
-  classification, where present. Only offered as a config-flow choice when the
-  active provider's `supports_native_tiers()` (ADR-0002 §1) is true.
-- **`FixedBoundaryTier`** — user-configured absolute €/kWh cutoffs between
-  tiers.
+- **`DerivedFromProviderTier`** — would use a provider's own native tier
+  classification, where one is reported for the planning horizon with at least
+  three levels. Only offered as a config-flow choice when the active provider's
+  `supports_native_tiers()` (ADR-0002 §1) is true. **No provider in this MVP
+  supports it** (ADR-0002 §5: the Tibber integration documents only price
+  values), so the class is defined by the architecture but **not implemented in
+  the MVP**; it becomes a task once a provider with native tiers is added.
+- **`FixedBoundaryTier`** — user-configured absolute €/kWh cutoffs between tiers
+  (at least two, per §2).
 - **`RollingWindowTier`** — percentile-based classification computed over a
   window of price data spanning a **backward (historical) length** and a
   separate **forward (known-future) length**, each independently configurable
   (e.g. 3 days backward, 1 day forward) rather than a single symmetric window —
   a provider that has already published tomorrow's prices should be able to fold
   them into the percentile distribution without that changing how far back
-  history is drawn from, and vice versa. Independent of any specific provider,
-  so it remains usable for a provider without native tier support (e.g. a future
-  EPEX provider).
+  history is drawn from, and vice versa. The forward part is the `price_curve`
+  itself; the backward part is the `history` argument, which the coordinator
+  assembles from the recorder (ADR-0002 §5, ADR-0001 §6). Independent of any
+  specific provider, so it is the strategy that works for every provider,
+  including a future EPEX one.
 
 ### 5 — Classification vs. policy
 

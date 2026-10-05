@@ -1,7 +1,7 @@
 # ADR-0004 – BMS Read Adapter Architecture
 
-**Date:** 2026-09-20 **Status:** Draft **Related capability:** CAP-03
-(`adr/adr-capability.md`)
+**Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related
+capability:** CAP-03 (`adr/adr-capability.md`)
 
 ---
 
@@ -47,6 +47,11 @@ concretely refers to.
   counters, consumed by ADR-0005's efficiency estimation.
 - `test_availability()` — mirrors the Price Provider pattern (ADR-0002 §1):
   `not_installed` / `not_available` / `available`.
+- Mapped entity IDs, read-only — the adapter exposes the entity IDs it was
+  configured with (SoC, both energy counters, the per-phase grid sensors of §4)
+  so history consumers (ADR-0005, ADR-0008) can query the recorder for them
+  through the injected `fetch_fn` (ADR-0001 §6). The adapter itself never reads
+  history.
 
 ### 2 — Entity mapping
 
@@ -79,6 +84,9 @@ a shape that policy decisions would likely invalidate.
   source, measured at the grid connection point rather than at the battery
   itself. They do not replace §1's whole-battery charge/discharge energy
   counters, which remain the basis for ADR-0005's efficiency estimation.
+  Historical values of these sensors (ADR-0008 §5), like SoC and the counters
+  (ADR-0005), are read from the recorder's statistics, so all of them must carry
+  a `state_class`.
 
 ---
 
