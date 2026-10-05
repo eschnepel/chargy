@@ -17,6 +17,7 @@ repos:
           - mdformat-gfm
           - mdformat-config
           - mdformat-ruff
+          - mdformat-simple-breaks
   - repo: local
     hooks:
       - id: mypy
