@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20
 **Status:** Draft
-**Related capability:** CAP-01 (`ADR/adr-capability.md`)
+**Related capability:** CAP-01 (`adr/adr-capability.md`)
 
 ---
 

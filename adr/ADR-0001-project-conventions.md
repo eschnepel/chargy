@@ -40,7 +40,7 @@ diverges from Shady's.
 ### 3 — Module boundaries and dependency direction (provisional)
 
 The concrete shape, based on the capabilities identified so far
-(`ADR/adr-capability.md`), before any of it has actually been built:
+(`adr/adr-capability.md`), before any of it has actually been built:
 
 ```mermaid
 flowchart BT
@@ -75,7 +75,7 @@ flowchart BT
 
 **This diagram is a planning sketch, not an implemented contract.** It
 must be corrected by amendment once real modules exist and diverge from
-it — the same discipline `ADR/INDEX.md` enforces for ADR status changes
+it — the same discipline `adr/INDEX.md` enforces for ADR status changes
 (ADR-0000 §7) applies here too.
 
 ### 4 — Current pure / zero-mocking test tier (ADR-0000 §6)

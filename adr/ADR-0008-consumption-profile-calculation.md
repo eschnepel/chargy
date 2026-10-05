@@ -4,7 +4,7 @@
 **Status:** Draft
 **Related ADRs:** ADR-0004 §4 (per-phase grid sensors, used for the
 correction in §5), ADR-0006 (the consumer of this capability's output)
-**Related capability:** CAP-04 (`ADR/adr-capability.md`)
+**Related capability:** CAP-04 (`adr/adr-capability.md`)
 
 ---
 

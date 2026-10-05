@@ -3,7 +3,7 @@
 **Date:** 2026-09-20
 **Status:** Draft
 **Related ADRs:** ADR-0002 (price curve input)
-**Related capability:** CAP-02 (`ADR/adr-capability.md`)
+**Related capability:** CAP-02 (`adr/adr-capability.md`)
 
 ---
 

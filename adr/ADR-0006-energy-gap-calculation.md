@@ -4,7 +4,7 @@
 **Status:** Draft
 **Related ADRs:** ADR-0004 (SoC/capacity input), ADR-0005 (efficiency
 input), ADR-0008 (consumption input)
-**Related capability:** CAP-06 (`ADR/adr-capability.md`)
+**Related capability:** CAP-06 (`adr/adr-capability.md`)
 
 ---
 

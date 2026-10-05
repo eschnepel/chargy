@@ -6,7 +6,7 @@
 project-specific identifier (package name, entity-class prefix, minimum
 Python/HA version) that originally lived in this document have been moved
 out into a dedicated project-conventions ADR, so this document stays
-genuinely project-independent. See the project's `ADR/INDEX.md` for that
+genuinely project-independent. See the project's `adr/INDEX.md` for that
 ADR's number and title.
 
 ---
@@ -194,7 +194,7 @@ ADR.
 
 ### 7 — Documentation: ADRs over inline essays
 
-Design rationale lives in `ADR/`, not in large module docstrings or inline
+Design rationale lives in `adr/`, not in large module docstrings or inline
 comment blocks. Module docstrings stay short (what the module does, 1–3
 sentences); the *why* behind non-obvious decisions is captured once in an
 ADR and referenced by number from the code (e.g. `# Clamp to zero (ADR-000X
@@ -203,13 +203,13 @@ ADR is versioned independently and can be marked `Superseded` if a
 decision changes, without having to hunt down every comment that explained
 it.
 
-**[`ADR/INDEX.md`](INDEX.md) is the single, authoritative list of every ADR
+**[`adr/INDEX.md`](INDEX.md) is the single, authoritative list of every ADR
 and its current status** — not this document, and not the project README
 (which only links to it). Updating it is a **mandatory** part of any
 structural change to the ADR set, in the same commit as the change itself,
 not a follow-up: adding a new ADR, splitting one, marking one
 `Superseded`, or otherwise changing an ADR's `Status` header all require a
-matching edit to `ADR/INDEX.md`.
+matching edit to `adr/INDEX.md`.
 
 ### 8 — Error handling
 

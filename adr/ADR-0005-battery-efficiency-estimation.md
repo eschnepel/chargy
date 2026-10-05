@@ -3,7 +3,7 @@
 **Date:** 2026-09-20
 **Status:** Draft
 **Related ADRs:** ADR-0004 (energy counters as input)
-**Related capability:** CAP-05 (`ADR/adr-capability.md`)
+**Related capability:** CAP-05 (`adr/adr-capability.md`)
 
 ---
 
