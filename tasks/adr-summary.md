@@ -1,6 +1,6 @@
 # ADR Summary — architectural ground truth for all workers
 
-Condensed from `adr/ADR-0000` … `ADR-0008` (all `Draft`, Phase 0 review
+Condensed from `adr/ADR-0000` … `ADR-0009` (all `Draft`, Phase 0 review
 2026-10-05). The ADRs win on any detail not stated here.
 
 ## Tech stack
@@ -21,9 +21,10 @@ Condensed from `adr/ADR-0000` … `ADR-0008` (all `Draft`, Phase 0 review
 ## Architecture
 
 - Layering, dependencies point upward only (ADR-0000 §3, ADR-0001 §3): pure
-  calculation modules → `coordinator.py` → `sensor.py` / `config_flow.py` /
-  `__init__.py`. Provisional module layout: `price_provider/`, `tier/`, `bms/`,
-  `consumption.py`, `efficiency.py`, `gap.py`, `schedule.py`.
+  calculation modules → `coordinator.py` → `sensor.py` / `switch.py` /
+  `config_flow.py` / `__init__.py`. Provisional module layout:
+  `price_provider/`, `tier/`, `bms/`, `consumption.py`, `efficiency.py`,
+  `gap.py`, `schedule.py`.
 - **Pure tier** (zero HA imports, zero-mocking tests): `tier/`, `gap.py`,
   `schedule.py`, `efficiency.py`, `consumption.py`, base classes of
   `price_provider/` and `bms/`. Narrow exceptions that touch HA:
@@ -33,13 +34,16 @@ Condensed from `adr/ADR-0000` … `ADR-0008` (all `Draft`, Phase 0 review
   pure modules via an injected sync
   `fetch_fn(sensor_id, start, end, statistic) -> list[float | None]`, one entry
   per 5-minute slot (`statistic` = `"mean"` or `"sum"`; `"sum"` for
-  `TOTAL_INCREASING` counters). Sensors need a `state_class`.
+  `TOTAL_INCREASING` counters). Sensors need a `state_class`. A second injected
+  `fetch_flag_fn(entity_id, start, end) -> list[bool | None]` (recorder *state*
+  history; `True` if `on` at any moment in the slot, `None` = no history) serves
+  on/off entities such as the holiday switch.
 - Pluggable strategies behind base classes: price provider, tier strategy, BMS
   adapter. Exactly one active provider.
 - No persistence: everything history-derived is rebuilt from the recorder at
   startup. Cadence (provisional): prices hourly + startup; 5-minute tick for
   live BMS read, gap and plan; history-derived stats at startup and daily after
-  midnight.
+  midnight; flipping the holiday switch recomputes gap and plan immediately.
 - Shared config: `window_days` (default 28) = recorder history analysed by
   ADR-0005/0008 (ADR-0001 §5).
 
@@ -67,9 +71,11 @@ Condensed from `adr/ADR-0000` … `ADR-0008` (all `Draft`, Phase 0 review
   config-flow entity pickers.
 - **Consumption (0008):** per-phase signed Shelly readings (entity picker per
   phase), corrected `max(0, shelly + bms_fed − bms_consumed)`; baseline per
-  phase via histogram peak detection (informational only); average/stddev per
-  phase × weekday × 5-min slot, combined to whole-house (means add, variances
-  add); thin-bucket smoothing is an implementation detail.
+  phase via histogram peak detection (diagnostic; also the holiday-mode
+  expectation, ADR-0009); average/stddev per phase × weekday × 5-min slot,
+  combined to whole-house (means add, variances add); thin-bucket smoothing is
+  an implementation detail. Slots in which holiday mode was active are excluded
+  from the average/stddev buckets (not from the baseline histogram).
 - **Efficiency (0005):** from charge/discharge counter `sum` statistics between
   an early and a recent SoC valley (24 h windows, valley must lie in the middle
   18 h, 6 h shifts); SoC-difference corrected; static default **95 %** if no
@@ -78,11 +84,17 @@ Condensed from `adr/ADR-0000` … `ADR-0008` (all `Draft`, Phase 0 review
   over horizon `min(price end, PV end)`; per-slot W → kWh = W×5/60/1000;
   `gap_battery = min(headroom, max(0, E_target − E_now − E_net + margin))`;
   grid-side `gap = gap_battery / η`; margin from per-bucket confidence
-  `1/(1+CV)` (proposed, unvalidated).
+  `1/(1+CV)` (proposed, unvalidated); in holiday mode the consumption input is
+  the holiday figure with stddev 0, so the margin is 0.
 - **Window planning (0007):** eligible = lowest `N` tiers by rank
   (`charge_eligible_tiers`, default `⌊count/2⌋`, highest never eligible);
   cheapest-first greedy up to `max_charge_power × 5 min` per slot; plan only, no
   actuation; no fixed deadline.
+- **Holiday mode (0009):** `ChargyHolidaySwitch` (`switch.py`, off by default,
+  restores state); while on, expected consumption = Σ phase baselines ×
+  `HOLIDAY_BASELINE_FACTOR` (constant 2.0) with stddev 0, for every slot;
+  holiday slots are kept out of the §3 statistics; if a configured phase has no
+  baseline, the normal profile is used and a warning logged.
 
 ## Non-functional requirements
 
@@ -117,3 +129,5 @@ Condensed from `adr/ADR-0000` … `ADR-0008` (all `Draft`, Phase 0 review
 - No persistence layer/`Store`; no real HA instance or
   `pytest-homeassistant-custom-component` in tests; no interpolation of prices;
   no bare/global `type: ignore`.
+- No automatic holiday detection or calendar; the holiday factor (2.0) is a
+  constant, not a config option, in the MVP.

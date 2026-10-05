@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
 ADR-0003 (tier plan input), ADR-0004 (max charge power), ADR-0006 (energy gap
-input) **Related capability:** CAP-07 (`adr/adr-capability.md`)
+input) **Related capability:** CAP-07 (`tasks/adr-capability.md`)
 
 ---
 

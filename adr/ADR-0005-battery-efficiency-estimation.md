@@ -3,7 +3,7 @@
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
 ADR-0004 (SoC, capacity, energy counters, mapped entity IDs), ADR-0001 §5/§6
 (`window_days`, `fetch_fn`) **Related capability:** CAP-05
-(`adr/adr-capability.md`)
+(`tasks/adr-capability.md`)
 
 ---
 

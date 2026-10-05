@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
 ADR-0002 (price curve input), ADR-0001 §6 (history via `fetch_fn`) **Related
-capability:** CAP-02 (`adr/adr-capability.md`)
+capability:** CAP-02 (`tasks/adr-capability.md`)
 
 ---
 

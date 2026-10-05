@@ -25,6 +25,7 @@ architecture until their status changes.
 | [0006](ADR-0006-energy-gap-calculation.md) | Draft | Energy Gap Calculation *(CAP-06)* |
 | [0007](ADR-0007-grid-charge-window-planning.md) | Draft | Grid-Charge Window Planning *(CAP-07)* |
 | [0008](ADR-0008-consumption-profile-calculation.md) | Draft | Consumption Profile Calculation (Baseline, Average, Deviation) *(CAP-04)* |
+| [0009](ADR-0009-holiday-mode.md) | Draft | Holiday Mode: Baseline-Only Consumption Expectation *(CAP-08)* |
 
-See [`adr-capability.md`](adr-capability.md) for the full capability list these
-ADRs derive from, pending Gate 1 approval.
+See [`tasks/adr-capability.md`](../tasks/adr-capability.md) for the full
+capability list these ADRs derive from, pending Gate 1 approval.

@@ -1,7 +1,7 @@
 # ADR-0004 – BMS Read Adapter Architecture
 
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related
-capability:** CAP-03 (`adr/adr-capability.md`)
+capability:** CAP-03 (`tasks/adr-capability.md`)
 
 ---
 

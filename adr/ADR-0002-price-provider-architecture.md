@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
 ADR-0001 §6 (`fetch_fn` for recorder history) **Related capability:** CAP-01
-(`adr/adr-capability.md`)
+(`tasks/adr-capability.md`)
 
 ---
 

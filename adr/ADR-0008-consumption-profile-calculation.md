@@ -1,10 +1,11 @@
 # ADR-0008 – Consumption Profile Calculation (Baseline, Average, Deviation)
 
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
-ADR-0001 §5/§6 (`window_days`, recorder access via `fetch_fn`), ADR-0004 §4
-(per-phase grid sensors, used for the correction in §5), ADR-0006 (the consumer
-of this capability's output) **Related capability:** CAP-04
-(`adr/adr-capability.md`)
+ADR-0001 §5/§6 (`window_days`, recorder access via `fetch_fn` /
+`fetch_flag_fn`), ADR-0004 §4 (per-phase grid sensors, used for the correction
+in §5), ADR-0006 (the consumer of this capability's output), ADR-0009 (holiday
+mode: baseline reuse and history exclusion) **Related capability:** CAP-04
+(`tasks/adr-capability.md`)
 
 ---
 
@@ -109,18 +110,21 @@ single-plateau histogram), it falls back to the percentage-cutoff behaviour with
 `cap` = 20, i.e. the mean of the lowest 20% of samples by value. A phase with no
 samples at all reports its baseline sensor as unavailable.
 
-**Role:** baseline is purely informational/diagnostic — a per-phase sensor, not
-an input any other capability consumes. Its intended use is comparison against
-that phase's *current* live wattage to surface idle consumers: a live reading
-persistently well above baseline, at a time nothing should be actively running,
-is a signal something was left on. This resolves what was previously an open
-question; it is not a floor/fallback value for §3's buckets.
+**Role:** baseline is a per-phase sensor with two uses. (1) Diagnostic:
+comparison against that phase's *current* live wattage to surface idle consumers
+— a live reading persistently well above baseline, at a time nothing should be
+actively running, is a signal something was left on. (2) Holiday mode
+(ADR-0009): the whole-house baseline × a buffer factor replaces §3's average as
+the expected consumption while the holiday switch is on. In normal mode it is
+not an input to any other capability and not a floor/fallback value for §3's
+buckets.
 
 ### 3 — Average and standard deviation: per phase × weekday × slot
 
 Average and standard deviation are computed per **phase × weekday × 5-minute
 slot** (the project's canonical resolution) from the historical (§5-corrected)
-readings of the last `window_days` days falling into that specific bucket:
+readings of the last `window_days` days falling into that specific bucket,
+**excluding slots in which holiday mode was active** (ADR-0009 §3):
 
 - Average = mean of the bucket's samples.
 - Standard deviation = sample standard deviation of the same set.
@@ -137,7 +141,8 @@ borrowing from neighboring slots/weekdays when a given bucket's own sample count
 is thin, rather than needing a separate minimum-history threshold or fallback
 mechanism. The exact extension (which neighboring buckets, what weighting) is
 left as an implementation detail, analogous to §2's own flagged-but-unvalidated
-weighting choice.
+weighting choice. Excluding holiday slots thins buckets in the same way and is
+covered by the same mechanism.
 
 ### 4 — Whole-house combination for downstream consumers
 
@@ -153,8 +158,9 @@ figures are combined as:
   straddles phases or its load correlates across them, the combined figure
   understates the true combined variance. Accepted for the MVP; revisit if it
   proves wrong in practice.
-- Baseline (§2) is **not** combined this way for ADR-0006's purposes — it
-  remains a per-phase-only, purely informational figure (§2's "Role").
+- Baseline (§2) is **not** part of this combination in normal mode — it stays a
+  per-phase figure (§2's "Role"). In holiday mode ADR-0009 §2 sums the phases'
+  baselines the same way (means add linearly).
 
 ### 5 — Gross-consumption correction using the BMS's own grid sensors
 
@@ -197,6 +203,10 @@ deviation is additionally exposed and is now used — ADR-0006 §5 derives a
 confidence figure from it, which in turn sizes a margin gap buffer. See ADR-0006
 for the actual formula.
 
+In holiday mode (ADR-0009 §2) the same interface returns the whole-house
+baseline × `HOLIDAY_BASELINE_FACTOR` as the average and a standard deviation of
+0\.
+
 ### 7 — History access and configuration
 
 - **Entities:** each phase's Shelly power sensor is chosen by the user in the
@@ -209,6 +219,9 @@ for the actual formula.
   zero-mocking tier and never imports the recorder API. All sensors involved
   must carry a `state_class` so statistics exist, and recorder retention must
   cover `window_days`.
+- **Holiday flags:** which historical slots were holiday slots comes from the
+  holiday switch's recorder state history through the injected `fetch_flag_fn`
+  (ADR-0001 §6, ADR-0009 §3); `consumption.py` stays pure.
 - **Cadence and persistence:** recomputed at startup and once per day (ADR-0001
   §6); nothing is persisted — the profile is rebuilt from the recorder.
 
@@ -225,6 +238,8 @@ for the actual formula.
   attributable to the BMS.
 - **Pro:** Standard deviation isn't just exposed for possible future use —
   ADR-0006 already consumes it via a confidence-derived margin buffer.
+- **Pro:** The baseline gains a second use (ADR-0009) without any new data
+  source.
 - **Pro:** Every input is rebuildable from the recorder, so no cache or
   persistence layer is needed.
 - **Con:** Depends on recorder retention of at least `window_days` and on

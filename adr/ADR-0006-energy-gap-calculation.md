@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-20 **Status:** Draft **Revised:** 2026-10-05 **Related ADRs:**
 ADR-0004 (SoC/capacity input), ADR-0005 (efficiency input), ADR-0008
-(consumption input) **Related capability:** CAP-06 (`adr/adr-capability.md`)
+(consumption input), ADR-0009 (holiday-mode consumption) **Related capability:**
+CAP-06 (`tasks/adr-capability.md`)
 
 ---
 
@@ -24,9 +25,9 @@ the forecast under-predicted.
 - Current SoC and max capacity (ADR-0004).
 - Round-trip efficiency η (ADR-0005).
 - Expected consumption per 5-minute slot — the combined whole-house average for
-  that weekday+slot bucket (ADR-0008 §4/§6). It is a power (W); like every
-  per-slot figure below it is converted to energy per slot, kWh = W × 5/60 /
-  1000\.
+  that weekday+slot bucket (ADR-0008 §4/§6), or while holiday mode is on the
+  baseline-based figure (ADR-0009 §2). It is a power (W); like every per-slot
+  figure below it is converted to energy per slot, kWh = W × 5/60 / 1000.
 - The externally sourced PV forecast at 5-minute resolution (already available;
   producing it is outside Chargy's scope), converted to energy per slot the same
   way if it is a power series.
@@ -69,6 +70,9 @@ The gap is recomputed as SoC, PV forecast, or expected consumption change, at
 the project's canonical 5-minute resolution. There is no fixed daily reset or
 single point-in-time computation — the gap is always the current, live figure.
 
+A change of the holiday switch (ADR-0009) triggers an immediate recompute rather
+than waiting for the next slot.
+
 ### 5 — Confidence-derived margin gap buffer
 
 The consumption input (§1) is ADR-0008's combined whole-house average per
@@ -97,6 +101,10 @@ cautious case, rather than dividing by zero.
 This specific formula is **proposed, not validated** the way ADR-0008 §1/§2's
 peak-detection algorithm was against live data — worth confirming once
 implemented.
+
+In holiday mode ADR-0008's interface reports a standard deviation of 0 (ADR-0009
+§2), so every `margin[bucket]` is 0 and `margin_buffer` vanishes without any
+special case here; the baseline factor is the holiday buffer.
 
 ---
 

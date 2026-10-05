@@ -37,7 +37,7 @@ revisiting if Chargy's actual deployment target ever diverges from Shady's.
 ### 3 — Module boundaries and dependency direction (provisional)
 
 The concrete shape, based on the capabilities identified so far
-(`adr/adr-capability.md`), before any of it has actually been built:
+(`tasks/adr-capability.md`), before any of it has actually been built:
 
 ```mermaid
 flowchart BT
@@ -49,7 +49,7 @@ flowchart BT
     gap["gap.py (ADR-0006)"]
     schedule["schedule.py (ADR-0007)"]
     coordinator["coordinator.py"]
-    entity_glue["sensor.py / config_flow.py / ..."]
+    entity_glue["sensor.py / switch.py / config_flow.py / ..."]
     init["__init__.py"]
 
     tier --> price_provider
@@ -81,6 +81,10 @@ reaches them through the `fetch_fn` the coordinator injects (§6).
 corrected by amendment once real modules exist and diverge from it — the same
 discipline `adr/INDEX.md` enforces for ADR status changes (ADR-0000 §7) applies
 here too.
+
+**Platforms:** Chargy provides the `sensor` and `switch` platforms
+(`ChargyHolidaySwitch`, ADR-0009). `hacs.json`'s `domains` and `mypy.ini`'s
+per-file suppressions (ADR-0000 §2) must list `switch` alongside `sensor`.
 
 ### 4 — Current pure / zero-mocking test tier (ADR-0000 §6)
 
@@ -114,12 +118,19 @@ modules.
   signature is fixed by the scaffold task, this is the shape consumers may rely
   on. Sensors read this way must carry a `state_class`, otherwise the recorder
   holds no statistics for them.
+- **`fetch_flag_fn`:**
+  `fetch_flag_fn(entity_id: str, start: datetime, end: datetime) -> list[bool | None]`
+  — the same per-slot shape for on/off entities (the holiday switch, ADR-0009
+  §3). Backed by the recorder's *state* history, since a switch has no
+  statistics: a slot is `True` if the entity was `on` at any moment within it,
+  `None` where the recorder holds no history.
 - **Cadence (provisional, to be refined by the coordinator task):** price data
   is polled hourly and at startup, the tier plan follows price updates (ADR-0003
   §3); a 5-minute tick at each slot boundary reads the live BMS state and
   recomputes the gap (ADR-0006 §4) and the charge plan (ADR-0007);
   history-derived statistics (ADR-0008, ADR-0005) are recomputed at startup and
-  once per day shortly after local midnight.
+  once per day shortly after local midnight. Flipping the holiday switch
+  (ADR-0009) triggers an immediate gap and plan recompute.
 - **No persistence layer in the MVP:** everything history-derived is rebuilt
   from the recorder at startup, so Chargy stores no cache of its own.
 
