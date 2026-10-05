@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout chargy
+        uses: actions/checkout@v7
+        with:
+          path: chargy
+
+      - name: Update manifest.json version and requirements
+        run: |
+          CHARGY_VERSION="${GITHUB_REF_NAME#v}"
+          jq --arg v "$CHARGY_VERSION"\
+            '.version = $v' \
+            chargy/custom_components/chargy/manifest.json \
+            > /tmp/manifest.json
+          mv /tmp/manifest.json \
+            chargy/custom_components/chargy/manifest.json
+
+      - name: Generate strings.json from translations/en.json
+        run: |
+          cp chargy/custom_components/chargy/translations/en.json \
+            chargy/custom_components/chargy/strings.json
+
+      - name: Build release ZIP
+        run: |
+          cd chargy/custom_components/chargy
+          zip -r ../../../chargy.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: chargy.zip
+          generate_release_notes: true

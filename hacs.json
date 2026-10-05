@@ -1,0 +1,9 @@
+{
+  "name": "Chargy",
+  "description": "Price-optimized grid-charge planning - plans when to charge a home battery from the grid by combining electricity price tiers, live BMS state, learned consumption patterns and a PV forecast into a planned set of cheap charge windows.",
+  "render_readme": true,
+  "homeassistant": "2026.3.1",
+  "domains": ["sensor"],
+  "zip_release": true,
+  "filename": "chargy.zip"
+}

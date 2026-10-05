@@ -1,0 +1,13 @@
+name: "Chargy CodeQL config — tests"
+
+# tests/ only, excluded from codeql-config-main.yml's query set so the
+# two surfaces can carry different filters. `py/catch-base-exception`
+# is excluded here but not there: test code that deliberately catches
+# broad exceptions (e.g. around a mocked HA fixture) is common and
+# expected, unlike in application code.
+paths:
+  - tests
+
+query-filters:
+  - exclude:
+      id: py/catch-base-exception
