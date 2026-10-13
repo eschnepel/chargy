@@ -22,10 +22,17 @@ architecture until their status changes.
 | [0003](ADR-0003-tier-strategy-architecture.md) | Draft | Tier Strategy Architecture *(CAP-02)* |
 | [0004](ADR-0004-bms-read-adapter.md) | Draft | BMS Read Adapter Architecture *(CAP-03)* |
 | [0005](ADR-0005-battery-efficiency-estimation.md) | Draft | Battery Round-Trip Efficiency Estimation *(CAP-05)* |
-| [0006](ADR-0006-energy-gap-calculation.md) | Draft | Energy Gap Calculation *(CAP-06)* |
-| [0007](ADR-0007-grid-charge-window-planning.md) | Draft | Grid-Charge Window Planning *(CAP-07)* |
+| [0006](ADR-0006-energy-gap-calculation.md) | Draft | Slot-wise Energy Trajectory and Gap *(CAP-06)* |
+| [0007](ADR-0007-grid-charge-planning.md) | Draft | Grid-Charge Planning *(CAP-07)* |
 | [0008](ADR-0008-consumption-profile-calculation.md) | Draft | Consumption Profile Calculation (Baseline, Average, Deviation) *(CAP-04)* |
 | [0009](ADR-0009-holiday-mode.md) | Draft | Holiday Mode: Baseline-Only Consumption Expectation *(CAP-08)* |
+| [0010](ADR-0010-battery-discharge-planning.md) | Draft | Battery-Discharge Planning *(CAP-09)* |
+| [0011](ADR-0011-planner-interface-and-order.md) | Draft | Planner Interface and Execution Order *(CAP-07, CAP-09)* |
+| [0012](ADR-0012-standby-power-estimation.md) | Draft | Standby Power Estimation *(CAP-10, pending Gate 1)* |
+
+Domain vocabulary is defined in [`GLOSSARY.md`](../GLOSSARY.md) (ADR-0001 §8).
+ADR-0007 and ADR-0010 were renamed on 2026-10-12 (the word "window" now only
+appears qualified, see the glossary); their numbers are unchanged.
 
 See [`tasks/adr-capability.md`](../tasks/adr-capability.md) for the full
 capability list these ADRs derive from, pending Gate 1 approval.
